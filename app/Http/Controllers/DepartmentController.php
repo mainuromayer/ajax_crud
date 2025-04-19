@@ -18,7 +18,7 @@ class DepartmentController extends Controller
     public function list()
     {
         try {
-            $departments = Department::with('department')->get();
+            $departments = Department::all();
             return response()->json([
                 'status' => true,
                 'data' => $departments
