@@ -15,36 +15,32 @@
                 </tr>
             </thead>
             <tbody>
-                {{-- Dynamically loaded --}}
+                {{-- Dynamic Content --}}
             </tbody>
         </table>
     </div>
 </div>
 
 <script>
-    
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
     loadDepartments();
 
     function loadDepartments() {
-        axios.get('{{ route('department.list') }}')
+        axios.get('{{ route("department.list") }}')
             .then(res => {
-                let rows = '';
-                res.data.data.forEach(d => {
-                    rows += `
-                        <tr>
-                            <td>${d.id}</td>
-                            <td>${d.name}</td>
-                            <td>
-                                <button class="btn btn-sm btn-warning editBtn" data-id="${d.id}" data-name="${d.name}">Edit</button>
-                                <button class="btn btn-sm btn-danger deleteBtn" data-id="${d.id}">Delete</button>
-                            </td>
-                        </tr>
-                    `;
-                });
+                const rows = res.data.data.map(d => `
+                    <tr>
+                        <td>${d.id}</td>
+                        <td>${d.name}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning editBtn" data-id="${d.id}" data-name="${d.name}">Edit</button>
+                            <button class="btn btn-sm btn-danger deleteBtn" data-id="${d.id}">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
                 document.querySelector('#departmentTable tbody').innerHTML = rows;
             })
-            .catch(err => {
+            .catch(() => {
                 Toastify({ text: "Failed to load departments", backgroundColor: "red" }).showToast();
             });
     }

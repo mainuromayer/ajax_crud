@@ -68,16 +68,21 @@ class DepartmentController extends Controller
                 'id' => 'required|exists:departments,id',
                 'name' => 'required|unique:departments,name,' . $request->id,
             ]);
-
-            $department = Department::find($request->id);
-            $department->name = $request->name;
-            $department->save();
-
+    
+            $department = Department::findOrFail($request->id);
+            $department->update(['name' => $request->name]);
+    
             return response()->json([
                 'status' => true,
                 'message' => 'Department updated',
                 'data' => $department
             ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (Exception $e) {
             return response()->json([
                 'status' => false, 
@@ -85,6 +90,7 @@ class DepartmentController extends Controller
             ], 500);
         }
     }
+    
 
     public function delete(Request $request)
     {

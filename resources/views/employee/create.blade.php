@@ -18,7 +18,7 @@
                     </select>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
                     <button class="btn btn-primary" type="submit">Create</button>
                 </div>
             </div>
@@ -28,19 +28,62 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('createEmployeeForm').addEventListener('submit', function (e) {
+    const form = document.getElementById('createEmployeeForm');
+    const modalEl = document.getElementById('createEmployeeModal');
+    const modal = new bootstrap.Modal(modalEl);
+
+    form.addEventListener('submit', function (e) {
         e.preventDefault();
-        const formData = new FormData(this);
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+
+        const formData = new FormData(form);
 
         axios.post('{{ route('employee.create') }}', formData)
             .then(res => {
-                Toastify({ text: res.data.message, backgroundColor: "green" }).showToast();
-                document.getElementById('createEmployeeForm').reset();
-                bootstrap.Modal.getInstance(document.getElementById('createEmployeeModal')).hide();
-                loadEmployees();
+                if (res.data.status) {
+                    Toastify({
+                        text: res.data.message,
+                        backgroundColor: "green",
+                        close: true
+                    }).showToast();
+
+                    form.reset();
+                    modal.hide();
+                    loadEmployees();
+                } else {
+                    Toastify({
+                        text: res.data.message || 'Something went wrong',
+                        backgroundColor: "orange",
+                        close: true
+                    }).showToast();
+                }
             })
-            .catch(err => {
-                Toastify({ text: err.response?.data?.message || "Create failed", backgroundColor: "red" }).showToast();
+            .catch(error => {
+                if (error.response?.status === 422) {
+                    const errors = error.response.data.errors;
+                    let messages = '';
+
+                    for (let field in errors) {
+                        messages += errors[field].join('\n') + '\n';
+                    }
+
+                    Toastify({
+                        text: messages.trim(),
+                        backgroundColor: "orange",
+                        close: true
+                    }).showToast();
+                } else {
+                    const msg = error.response?.data?.message || 'Server Error';
+                    Toastify({
+                        text: msg,
+                        backgroundColor: "red",
+                        close: true
+                    }).showToast();
+                }
+            })
+            .finally(() => {
+                submitButton.disabled = false;
             });
     });
 });

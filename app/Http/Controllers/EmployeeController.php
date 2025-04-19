@@ -6,6 +6,7 @@ use Exception;
 use App\Models\Employee;
 use Illuminate\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class EmployeeController extends Controller
 {
@@ -38,23 +39,25 @@ class EmployeeController extends Controller
                 'email' => 'required|email|unique:employees,email',
                 'department_id' => 'required|exists:departments,id',
             ]);
-
-            $employee = Employee::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'department_id' => $request->department_id,
-            ]);
-
+    
+            $employee = Employee::create($request->only(['name', 'email', 'department_id']));
+    
             return response()->json([
                 'status' => true,
                 'message' => 'Employee created',
                 'data' => $employee
             ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => $e->getMessage()
-            ]);
+            ], 500);
         }
     }
 
@@ -67,25 +70,29 @@ class EmployeeController extends Controller
                 'email' => 'required|email|unique:employees,email,' . $request->id,
                 'department_id' => 'required|exists:departments,id',
             ]);
-
-            $employee = Employee::find($request->id);
-            $employee->name = $request->name;
-            $employee->email = $request->email;
-            $employee->department_id = $request->department_id;
-            $employee->save();
-
+    
+            $employee = Employee::findOrFail($request->id);
+            $employee->update($request->only(['name', 'email', 'department_id']));
+    
             return response()->json([
                 'status' => true,
                 'message' => 'Employee updated',
                 'data' => $employee
             ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => $e->getMessage()
-            ]);
+            ], 500);
         }
     }
+    
 
     public function delete(Request $request)
     {

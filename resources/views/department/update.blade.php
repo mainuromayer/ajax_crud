@@ -21,32 +21,54 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    document.body.addEventListener('click', function (e) {
-        if (e.target.classList.contains('editBtn')) {
-            const id = e.target.dataset.id;
-            const name = e.target.dataset.name;
-
-            const modal = new bootstrap.Modal(document.getElementById('updateDepartmentModal'));
-            document.querySelector('#updateDepartmentForm [name="id"]').value = id;
-            document.querySelector('#updateDepartmentForm [name="name"]').value = name;
-            modal.show();
-        }
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('updateDepartmentForm');
+        const modalEl = document.getElementById('updateDepartmentModal');
+        const modal = new bootstrap.Modal(modalEl);
+    
+        document.body.addEventListener('click', function (e) {
+            if (e.target.classList.contains('editBtn')) {
+                form.name.value = e.target.dataset.name;
+                form.id.value = e.target.dataset.id;
+                modal.show();
+            }
+        });
+    
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+    
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+    
+            const formData = new FormData(form);
+    
+            axios.post('{{ route("department.update") }}', formData)
+                .then(res => {
+                    if (res.data.status) {
+                        Toastify({ text: res.data.message, backgroundColor: "green" }).showToast();
+                        form.reset();
+                        modal.hide();
+                        loadDepartments();
+                    } else {
+                        Toastify({ text: res.data.message || "Update failed", backgroundColor: "orange" }).showToast();
+                    }
+                })
+                .catch(err => {
+                    if (err.response?.status === 422) {
+                        const errors = err.response.data.errors;
+                        let messages = '';
+                        for (let key in errors) {
+                            messages += errors[key].join('\n') + '\n';
+                        }
+                        Toastify({ text: messages.trim(), backgroundColor: "orange" }).showToast();
+                    } else {
+                        Toastify({ text: err.response?.data?.message || "Server Error", backgroundColor: "red" }).showToast();
+                    }
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                });
+        });
     });
-
-    document.getElementById('updateDepartmentForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-
-        axios.post('{{ route('department.update') }}', formData)
-            .then(res => {
-                Toastify({ text: res.data.message, backgroundColor: "green" }).showToast();
-                bootstrap.Modal.getInstance(document.getElementById('updateDepartmentModal')).hide();
-                loadDepartments();
-            })
-            .catch(err => {
-                Toastify({ text: err.response?.data?.message || "Update failed", backgroundColor: "red" }).showToast();
-            });
-    });
-});
-</script>
+    </script>
+    

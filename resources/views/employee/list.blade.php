@@ -17,19 +17,18 @@
                 </tr>
             </thead>
             <tbody>
-                {{-- Loaded by AJAX --}}
+                {{-- Dynamic Content --}}
             </tbody>
         </table>
     </div>
 </div>
 
 <script>
-    
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
     loadEmployees();
 
     function loadEmployees() {
-        axios.get('{{ route('employee.list') }}')
+        axios.get('{{ route("employee.list") }}')
             .then(res => {
                 const rows = res.data.data.map(emp => `
                     <tr>
@@ -38,10 +37,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         <td>${emp.email}</td>
                         <td>${emp.department?.name ?? 'N/A'}</td>
                         <td>
-                            <button class="btn btn-sm btn-warning editBtn" 
-                                data-id="${emp.id}" 
-                                data-name="${emp.name}" 
-                                data-email="${emp.email}" 
+                            <button class="btn btn-sm btn-warning editBtn"
+                                data-id="${emp.id}"
+                                data-name="${emp.name}"
+                                data-email="${emp.email}"
                                 data-department="${emp.department_id}">
                                 Edit
                             </button>
@@ -53,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 `).join('');
                 document.querySelector('#employeeTable tbody').innerHTML = rows;
             })
-            .catch(err => {
+            .catch(() => {
                 Toastify({ text: "Failed to load employees", backgroundColor: "red" }).showToast();
             });
     }
