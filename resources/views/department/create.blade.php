@@ -1,5 +1,6 @@
 <!-- Create Department Modal -->
-<div class="modal fade" id="createDepartmentModal" tabindex="-1" aria-labelledby="createDepartmentModalLabel" aria-hidden="true">
+<div class="modal fade" id="createDepartmentModal" tabindex="-1" aria-labelledby="createDepartmentModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <form id="createDepartmentForm" method="POST">
             @csrf
@@ -22,44 +23,66 @@
 
 <!-- Create Department AJAX Script -->
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('createDepartmentForm');
-    const modalEl = document.getElementById('createDepartmentModal');
-    const modal = new bootstrap.Modal(modalEl);
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('createDepartmentForm');
+        const modalEl = document.getElementById('createDepartmentModal');
+        const modal = new bootstrap.Modal(modalEl);
 
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
+        form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    
+    const submitButton = form.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
 
-        const formData = new FormData(form);
+    const formData = new FormData(form);
 
-        axios.post('{{ route('department.create') }}', formData)
-            .then(res => {
-                if (res.data.status) {
-                    Toastify({
-                        text: res.data.message,
-                        backgroundColor: "green",
-                        close: true
-                    }).showToast();
+    axios.post('{{ route('department.create') }}', formData)
+        .then(res => {
+            if (res.data.status) {
+                Toastify({
+                    text: res.data.message,
+                    backgroundColor: "green",
+                    close: true
+                }).showToast();
 
-                    form.reset();
-                    modal.hide();
-                    loadDepartments();
-                } else {
-                    Toastify({
-                        text: res.data.message || 'Something went wrong',
-                        backgroundColor: "orange",
-                        close: true
-                    }).showToast();
+                form.reset();
+                modal.hide();
+                loadDepartments();
+            } else {
+                Toastify({
+                    text: res.data.message || 'Something went wrong',
+                    backgroundColor: "orange",
+                    close: true
+                }).showToast();
+            }
+        })
+        .catch(error => {
+            if (error.response?.status === 422) {
+                const errors = error.response.data.errors;
+                let messages = '';
+
+                for (let field in errors) {
+                    messages += errors[field].join('\n') + '\n';
                 }
-            })
-            .catch(error => {
+
+                Toastify({
+                    text: messages.trim(),
+                    backgroundColor: "orange",
+                    close: true
+                }).showToast();
+            } else {
                 const msg = error.response?.data?.message || 'Server Error';
                 Toastify({
                     text: msg,
                     backgroundColor: "red",
                     close: true
                 }).showToast();
-            });
-    });
+            }
+        })
+        .finally(() => {
+            submitButton.disabled = false;
+        });
 });
+
+    });
 </script>

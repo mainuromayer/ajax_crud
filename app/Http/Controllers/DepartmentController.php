@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\View\View;
 use App\Models\Department;
 use Illuminate\Http\Request;
+use Dotenv\Exception\ValidationException;
 
 class DepartmentController extends Controller
 {
@@ -36,19 +37,25 @@ class DepartmentController extends Controller
             $request->validate([
                 'name' => 'required|unique:departments,name',
             ]);
-
+    
             $department = Department::create([
                 'name' => $request->name,
             ]);
-
+    
             return response()->json([
                 'status' => true,
                 'message' => 'Department created',
                 'data' => $department
             ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (Exception $e) {
             return response()->json([
-                'status' => false, 
+                'status' => false,
                 'message' => $e->getMessage()
             ], 500);
         }
